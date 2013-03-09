@@ -2,12 +2,21 @@
 # Jens Kutilek 2013-01-02
 
 from robofab.interface.all.dialogs import AskString
+from mojo.roboFont import version
 
 def scaleGlyph(glyph, factor, scaleWidth=True, roundCoordinates=True):
     if not(scaleWidth):
         oldWidth = glyph.width
     if len(glyph.components) == 0:
-        glyph *= factor
+        if version == "1.4":
+            # stupid workaround for bug in RoboFont 1.4
+            for contour in glyph:
+                for point in contour.points:
+                    point.x *= factor
+                    point.y *= factor
+            glyph.width *= factor
+        else:
+            glyph *= factor
         if roundCoordinates:
             glyph.round()
     else:
@@ -36,6 +45,10 @@ def changeUPM(font, factor, roundCoordinates=True):
     # Glyphs
     for g in font:
         scaleGlyph(g, factor)
+        for guide in g.guides:
+            # another thing that doesn't work in RoboFont 1.4
+            guide.x *= factor
+            guide.y *= factor
     
     # Glyph layers
     mainLayer = "foreground"
@@ -50,11 +63,12 @@ def changeUPM(font, factor, roundCoordinates=True):
     if font.kerning:
         font.kerning.scale(factor)
         if roundCoordinates:
-            font.kerning.round(1)
+            if version != "1.4":
+                font.kerning.round(1)
+            else:
+                print "WARNING: kerning values cannot be rounded to integer in RoboFont 1.4."
     
     # TODO: Change positioning feature code?
-    
-    # TODO: Change guide positions
     
     # Vertical dimensions
     font.info.descender = int(round(font.info.descender * factor))
