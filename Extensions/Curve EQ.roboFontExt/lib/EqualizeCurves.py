@@ -134,7 +134,6 @@ class CurveEqualizer(BaseWindowController):
         addObserver(self, "_curvePreview", "drawInactive")
         addObserver(self, "_currentGlyphChanged", "currentGlyphChanged")
         
-        self.changesApplied = False
         self.tmpGlyph = RGlyph()
         UpdateCurrentGlyphView()
         
@@ -148,7 +147,6 @@ class CurveEqualizer(BaseWindowController):
         choice = sender.get()
         self.method = self.methods[choice]
         self._checkSecondarySelectors()
-        self.changesApplied == False
         UpdateCurrentGlyphView()
     
     def _changeCurvature(self, sender):
@@ -158,7 +156,6 @@ class CurveEqualizer(BaseWindowController):
     
     def _changeCurvatureFree(self, sender):
         self.curvatureFree = sender.get()
-        #self._curvePreview({"glyph": CurrentGlyph(), "scale": 1})
         UpdateCurrentGlyphView()
     
     def _currentGlyphChanged(self, sender=None):
@@ -213,7 +210,7 @@ class CurveEqualizer(BaseWindowController):
             self.tmpGlyph.draw(mPen)
             mPen.draw()
             restore()
-            UpdateCurrentGlyphView()
+            #UpdateCurrentGlyphView()
     
     
     # Equalizer methods
