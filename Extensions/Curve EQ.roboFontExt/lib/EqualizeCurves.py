@@ -4,7 +4,7 @@
 ## Version 0.1 by Jens Kutilek 2013-02-13
 ## Version 0.2 by Jens Kutilek 2013-03-26
 ## Version 0.3 by Jens Kutilek 2013-04-06
-## http://www.netzallee.de/robofont/
+## http://www.netzallee.de/extra/robofont
 
 import vanilla
 
