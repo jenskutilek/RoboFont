@@ -4,19 +4,22 @@
 from robofab.interface.all.dialogs import AskString
 from mojo.roboFont import version
 
+def scalePoints(glyph, factor):
+    if version == "1.4":
+        # stupid workaround for bug in RoboFont 1.4
+        for contour in glyph:
+            for point in contour.points:
+                point.x *= factor
+                point.y *= factor
+        glyph.width *= factor
+    else:
+        glyph *= factor
+
 def scaleGlyph(glyph, factor, scaleWidth=True, roundCoordinates=True):
     if not(scaleWidth):
         oldWidth = glyph.width
     if len(glyph.components) == 0:
-        if version == "1.4":
-            # stupid workaround for bug in RoboFont 1.4
-            for contour in glyph:
-                for point in contour.points:
-                    point.x *= factor
-                    point.y *= factor
-            glyph.width *= factor
-        else:
-            glyph *= factor
+        scalePoints(glyph, factor)
         if roundCoordinates:
             glyph.round()
     else:
@@ -27,7 +30,7 @@ def scaleGlyph(glyph, factor, scaleWidth=True, roundCoordinates=True):
             components.append(glyph.components[i])
         for c in components:
             glyph.removeComponent(c)    
-        glyph *= factor
+        scalePoints(glyph, factor)
         if roundCoordinates:
             glyph.round()
         # restore components
