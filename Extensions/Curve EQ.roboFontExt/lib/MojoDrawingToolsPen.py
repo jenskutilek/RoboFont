@@ -4,6 +4,7 @@ from mojo.drawingTools import newPath, moveTo, lineTo, curveTo, closePath, drawP
 
 class MojoDrawingToolsPen(BasePen):
     def __init__(self, g, f):
+        BasePen.__init__(self, None)
         self.g = g
         self.glyphSet = f
         self.__currentPoint = None
