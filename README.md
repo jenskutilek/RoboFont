@@ -18,6 +18,15 @@ SetVerticalMetrics.py
 
 Measures all open fonts and calculates vertical metrics according to Karsten Lücke’s method.
 
+TestFontCompilation.py
+---------------------
+
+Makes a copy of the current font and tries to generate it, mainly to check your OT feature code.
+All glyphs are cleared, so this is much faster than regular generation where you have to
+wait for remove overlaps, decompose, etc.
+
+If any errors occur, the error messages are displayed in the output window.
+
 TestInstallAllOpen.py
 ---------------------
 
