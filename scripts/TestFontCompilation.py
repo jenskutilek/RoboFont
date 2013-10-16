@@ -1,5 +1,6 @@
 from string import split
 from os import remove
+from mojo.roboFont import version
 
 f = CurrentFont()
 tf = f.copy(showUI=False)
@@ -12,7 +13,13 @@ result = tf.generate(myPath, "otf")
 tf.close()
 
 lines = split(result, "\n")
-if lines[-1][:15] == "makeotf [Error]":
+
+if version[:3] == "1.5":
+    checkLine = -3
+else:
+    checkLine = -1
+
+if lines[checkLine][:15] == "makeotf [Error]":
     print "Font compilation failed."
     for r in lines:
         if r[:18] == "makeotfexe [ERROR]":
