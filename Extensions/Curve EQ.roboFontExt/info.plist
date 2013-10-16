@@ -33,5 +33,9 @@
 	<real>1360841639.551887</real>
 	<key>version</key>
 	<string>0.3</string>
+	<key>repository</key>
+	<string>jenskutilek/RoboFont</string>
+	<key>extensionPath</key>
+	<string>Extensions/Curve EQ.roboFontExt</string>
 </dict>
 </plist>
