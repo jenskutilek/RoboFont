@@ -6,3 +6,10 @@ Curve Equalizer
 <img src="https://raw.github.com/jenskutilek/RoboFont/master/images/curve-eq.png" width="634" height="517" alt="">
 
 Select the curve adjustment method from the window and click "Equalize selected" to apply the adjustment to the current selection in the glyph window.
+
+GlyphRotator
+============
+
+"Glyph Rotator", or Rotated Glyph Preview by full name, shows a preview of the current glyph which can be rotated via the slider below.
+
+<img src="https://raw.github.com/jenskutilek/RoboFont/master/images/glyphrotator.png" width="363" height="406" alt="">
