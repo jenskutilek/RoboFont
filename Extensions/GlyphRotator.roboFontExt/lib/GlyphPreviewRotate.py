@@ -40,6 +40,7 @@ class RotatedGlyphPreview(GlyphProcessorUI):
     
     def _getObservers(self):
         return {
+            "draw": ["_currentGlyphChangedObserver",],
             "currentGlyphChanged": ["_currentGlyphChangedObserver",],
         }
     
