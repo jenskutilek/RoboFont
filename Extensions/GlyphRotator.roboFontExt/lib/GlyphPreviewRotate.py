@@ -9,7 +9,6 @@ class RotatedGlyphPreview(GlyphProcessorUI):
     
     def __init__(self):
         self.extensionID = self.getExtensionID()
-        self.font = CurrentFont()
         
         self._initSettings()
         self._loadSettings()
@@ -17,7 +16,7 @@ class RotatedGlyphPreview(GlyphProcessorUI):
         self.w = self._buildUI()
         self._addObservers()
         self.setUpBaseWindowBehavior()
-        self._draw()
+        self._currentGlyphChangedObserver()
         self.w.open()
     
     def _getExtensionID(self):
@@ -45,6 +44,12 @@ class RotatedGlyphPreview(GlyphProcessorUI):
         }
     
     def _currentGlyphChangedObserver(self, info=None):
+        if CurrentFont() is not None:
+            self._scale = 1000.0/CurrentFont().info.unitsPerEm
+            self._y = (CurrentFont().info.ascender + CurrentFont().info.descender) / 2 * self._scale
+        else:
+            self._scale = 1
+            self._y = 500
         self._draw()
         
     def _setRotation(self, sender):
@@ -61,8 +66,9 @@ class RotatedGlyphPreview(GlyphProcessorUI):
     def _draw(self):
         if CurrentGlyph() is not None:
             self.previewGlyph = CurrentGlyph().copy()
-            y = (self.font.info.ascender + self.font.info.descender) / 2
-            self.previewGlyph.rotate(self.settings["rotation"], (self.previewGlyph.width/2.0, y))
+            self.previewGlyph.scale((self._scale, self._scale))
+            self.previewGlyph.width *= self._scale
+            self.previewGlyph.rotate(self.settings["rotation"], (self.previewGlyph.width/2.0, self._y))
         else:
             self.previewGlyph = RGlyph()
         self.w.preview.setGlyph(self.previewGlyph)
