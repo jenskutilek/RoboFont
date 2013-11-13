@@ -4,6 +4,7 @@
 ## Version 0.1 by Jens Kutilek 2013-02-13
 ## Version 0.2 by Jens Kutilek 2013-03-26
 ## Version 0.3 by Jens Kutilek 2013-04-06
+## Version 0.4 by Jens Kutilek 2013-11-13
 ## http://www.netzallee.de/extra/robofont
 
 import vanilla
@@ -134,7 +135,7 @@ class CurveEqualizer(BaseWindowController):
         addObserver(self, "_curvePreview", "drawInactive")
         addObserver(self, "_currentGlyphChanged", "currentGlyphChanged")
         
-        self.tmpGlyph = RGlyph()
+        self.tmp_glyph = RGlyph()
         UpdateCurrentGlyphView()
         
         self.setUpBaseWindowBehavior()
@@ -196,19 +197,18 @@ class CurveEqualizer(BaseWindowController):
         return (x, y)
     
     def _curvePreview(self, info):
-        dg = info["glyph"]
-        scale = info["scale"]
-        if dg is not None:
-            self.tmpGlyph.clear()
-            self.tmpGlyph.appendGlyph(CurrentGlyph())
+        _doodle_glyph = info["glyph"]
+        if _doodle_glyph is not None and len(_doodle_glyph.components) == 0 and _doodle_glyph.selection != []:
+            self.tmp_glyph.clear()
+            self.tmp_glyph.appendGlyph(_doodle_glyph)
             self._eqSelected()
-            mPen = MojoDrawingToolsPen(self.tmpGlyph, CurrentFont())
+            pen = MojoDrawingToolsPen(self.tmp_glyph, _doodle_glyph.getParent())
             save()
             stroke(0, 0, 0, 0.5)
             fill(None)
-            strokeWidth(scale)
-            self.tmpGlyph.draw(mPen)
-            mPen.draw()
+            strokeWidth(info["scale"])
+            self.tmp_glyph.draw(pen)
+            pen.draw()
             restore()
             #UpdateCurrentGlyphView()
     
@@ -311,24 +311,24 @@ class CurveEqualizer(BaseWindowController):
     # The main method, check which EQ should be applied and do it (or just apply it on the preview glyph)
     
     def _eqSelected(self, sender=None):
-        refGlyph = CurrentGlyph()
-        if refGlyph.selection != []:
+        reference_glyph = CurrentGlyph()
+        if reference_glyph.selection != []:
             if sender is None:
                 # EQ button not pressed, preview only.
-                modGlyph = self.tmpGlyph
+                modify_glyph = self.tmp_glyph
             else:
-                modGlyph = refGlyph
-                refGlyph.prepareUndo(undoTitle="Equalize curve in /%s" % refGlyph.name)
-            for contourIndex in range(len(refGlyph.contours)):
-                refContour = refGlyph.contours[contourIndex]
-                modContour = modGlyph.contours[contourIndex]
-                for i in range(len(refContour.segments)):
-                    refSegment = refContour[i]
-                    modSegment = modContour[i]
-                    if refSegment.selected and refSegment.type == "curve":
+                modify_glyph = reference_glyph
+                reference_glyph.prepareUndo(undoTitle="Equalize curve in /%s" % reference_glyph.name)
+            for contourIndex in range(len(reference_glyph.contours)):
+                reference_contour = reference_glyph.contours[contourIndex]
+                modify_contour = modify_glyph.contours[contourIndex]
+                for i in range(len(reference_contour.segments)):
+                    reference_segment = reference_contour[i]
+                    modify_segment = modify_contour[i]
+                    if reference_segment.selected and reference_segment.type == "curve":
                         # last point of the previous segment
-                        p0 = modContour[i-1][-1]
-                        p1, p2, p3 = modSegment.points
+                        p0 = modify_contour[i-1][-1]
+                        p1, p2, p3 = modify_segment.points
                         
                         if self.method == "fl":
                             p1, p2 = self.eqFL(p0, p1, p2, p3)
@@ -345,8 +345,8 @@ class CurveEqualizer(BaseWindowController):
                         if sender is not None:
                             p1.round()
                             p2.round()
-            refGlyph.update()
+            reference_glyph.update()
             if sender is not None:
-                refGlyph.performUndo()    
+                reference_glyph.performUndo()    
 
 OpenWindow(CurveEqualizer)
