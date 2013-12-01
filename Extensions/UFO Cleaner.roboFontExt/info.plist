@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>addToMenu</key>
+	<array>
+		<dict>
+			<key>path</key>
+			<string>UFOCleaner.py</string>
+			<key>preferredName</key>
+			<string>UFO Cleaner</string>
+			<key>shortKey</key>
+			<string></string>
+		</dict>
+	</array>
+	<key>developer</key>
+	<string>Jens Kutilek</string>
+	<key>developerURL</key>
+	<string>http://www.netzallee.de/extra/robofont</string>
+	<key>html</key>
+	<true/>
+	<key>launchAtStartUp</key>
+	<integer>0</integer>
+	<key>mainScript</key>
+	<string></string>
+	<key>name</key>
+	<string>UFO Cleaner</string>
+	<key>requiresVersionMajor</key>
+	<string>1</string>
+	<key>requiresVersionMinor</key>
+	<string>4</string>
+	<key>timeStamp</key>
+	<real>1385923561.0207976</real>
+	<key>version</key>
+	<string>0.2</string>
+	<key>repository</key>
+	<string>jenskutilek/RoboFont</string>
+	<key>extensionPath</key>
+	<string>Extensions/UFOCleaner.roboFontExt</string>
+</dict>
+</plist>
