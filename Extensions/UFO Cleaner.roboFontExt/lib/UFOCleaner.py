@@ -4,6 +4,7 @@ from sys import getsizeof
 from defconAppKit.windows.baseWindow import BaseWindowController
 from lib.scripting.codeEditor import CodeEditor
 from robofab.plistlib import writePlistToString
+from knownKeys import known_keys
 
 
 class UFOCleaner(BaseWindowController):
@@ -13,55 +14,7 @@ class UFOCleaner(BaseWindowController):
         self._libkeys = []
         self._key_contents = {}
         self._seen_keys = []
-        self._known_keys = {
-            "com.fontfont.colorfont.color": "FontFont foreground color",
-            "com.fontfont.colorfont.colorbg": "FontFont background color",
-            "com.fontfont.colorfont.colorpalette": "FontFont color palette",
-            "com.fontfont.colorfont.layers": "FontFont color font layers",
-            "com.fontfont.flott": "FontFont TrueType hinting data",
-            
-            "com.schriftgestaltung.fontMaster.userData": "Glyphs app user data",
-            "com.schriftgestaltung.gridSize": "Glyphs app grid size",
-            "com.schriftgestaltung.useNiceNames": "Glyphs app nice name setting",
-            "com.schriftgestaltung.weight": "Glyphs app weight name",
-            "com.schriftgestaltung.weightValue": "Glyphs app weight value",
-            
-            "com.superpolator.editor.generateInfo": "Superpolator info",
-            
-            "com.typemytype.robofont.compileSettings.autohint": "RoboFont autohint setting",
-            "com.typemytype.robofont.compileSettings.checkOutlines": "RoboFont check outlines",
-            "com.typemytype.robofont.compileSettings.decompose": "RoboFont decompose setting",
-            "com.typemytype.robofont.compileSettings.generateFormat": "RoboFont format",
-            "com.typemytype.robofont.compileSettings.MacRomanFirst": "RoboFont Mac Roman setting",
-            "com.typemytype.robofont.compileSettings.path": "RoboFont compile path",
-            "com.typemytype.robofont.compileSettings.releaseMode": "RoboFont release mode",
-            "com.typemytype.robofont.foreground.layerStrokeColor": "RoboFont foreground color",
-            "com.typemytype.robofont.background.layerStrokeColor": "RoboFont background color",
-            "com.typemytype.robofont.background.layerShow": "RoboFont background show",
-            "com.typemytype.robofont.guides": "RoboFont guides",
-            "com.typemytype.robofont.image": "RoboFont image data",
-            "com.typemytype.robofont.italicSlantOffset": "RoboFont italic offset",
-            "com.typemytype.robofont.layerOrder": "RoboFont layer order",
-            "com.typemytype.robofont.mark": "RoboFont glyph mark colors",
-            "com.typemytype.robofont.segmentType": "RoboFont segment type",
-            "com.typemytype.robofont.shouldAddPointsInSplineConversion": "RoboFont TTF settings",
-            "com.typemytype.robofont.sort": "RoboFont sort settings",
-            
-            "com.typesupply.MetricsMachine4.groupColors": "MetricsMachine group colors",
-            "com.typesupply.ufocentral.openTypeNameWWSFamilyName": "UFOCentral WWS family name",
-            "com.typesupply.ufocentral.openTypeNameWWSSubfamilyName": "UFOCentral WWS subfamily name",
-            
-            "org.robofab.fontlab.maskData": "FontLab glyph mask data",
-            "org.robofab.fontlab.mark": "FontLab glyph hmark colors",
-            "org.robofab.glyphOrder": "Robofab glyph order",
-            "org.robofab.opentype.classes": "Robofab OpenType classes",
-            "org.robofab.opentype.featureorder": "Robofab OpenType feature order",
-            "org.robofab.opentype.features": "Robofab OpenType features",
-            "org.robofab.postScriptHintData": "Robofab PostScript hints",
-            
-            "public.glyphOrder": "Glyph order",
-            
-        }
+        self._known_keys = known_keys
         self._key_sizes = {}
         self.total_size = 0
         self._collect_keys()
