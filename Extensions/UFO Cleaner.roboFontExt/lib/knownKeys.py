@@ -5,6 +5,9 @@ known_keys = {
             "com.fontfont.colorfont.layers": "FontFont color font layers",
             "com.fontfont.flott": "FontFont TrueType hinting data",
             
+            "com.fontlab.v2.tth": "FontLab TrueType hinting data",
+            "com.fontlab.ttprogram": "FontLab TrueType glyph programs",
+            
             "com.schriftgestaltung.fontMaster.userData": "Glyphs app user data",
             "com.schriftgestaltung.gridSize": "Glyphs app grid size",
             "com.schriftgestaltung.useNiceNames": "Glyphs app nice name setting",
