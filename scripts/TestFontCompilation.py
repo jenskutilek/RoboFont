@@ -22,7 +22,7 @@ else:
 if lines[checkLine][:15] == "makeotf [Error]":
     print "Font compilation failed."
     for r in lines:
-        if r[:18] == "makeotfexe [ERROR]":
+        if r[:18] in ["makeotfexe [ERROR]", "makeotfexe [FATAL]"]:
             print r[11:]
 else:
     print "Font will compile successfully."
