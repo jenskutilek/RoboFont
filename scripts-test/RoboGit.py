@@ -19,9 +19,8 @@ from defconAppKit.windows.baseWindow import BaseWindowController
 from robofab.glifLib2 import GlyphSet, readGlyphFromString
 
 from mojo.events import addObserver, removeObserver
-from mojo.UI import CurrentGlyphWindow, OpenGlyphWindow, UpdateCurrentGlyphView, SmartSet, addSmartSet, removeSmartSet
-from MojoDrawingToolsPen import MojoDrawingToolsPen
-from mojo.drawingTools import save, restore, fill, strokeWidth
+from mojo.UI import OpenGlyphWindow, UpdateCurrentGlyphView, SmartSet, addSmartSet, removeSmartSet
+from mojo.drawingTools import save, restore, fill, strokeWidth, drawGlyph
 
 
 class RoboGit(BaseWindowController):
@@ -179,13 +178,10 @@ class RoboGit(BaseWindowController):
         g = info["glyph"]
         if g is not None:
             if g.name in self.headGlyphs:
-                glyph = self.headGlyphs[g.name]
-                mPen = MojoDrawingToolsPen(glyph, CurrentFont())
                 save()
                 strokeWidth(None)
                 fill(1,0,0,0.2)
-                glyph.draw(mPen)
-                mPen.draw()
+                drawGlyph(self.headGlyphs[g.name])
                 restore()
     
     def checkGlyphStatus(self, sender):
