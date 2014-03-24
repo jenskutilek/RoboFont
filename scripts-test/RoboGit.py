@@ -155,11 +155,7 @@ class RoboGit(BaseWindowController):
     def openGlyphDiffWindow(self, sender):
         newGlyphName = sender.get()[sender.getSelection()[0]]["Glyph"]
         #print "Goto Glyph:", newGlyphName
-        gw = CurrentGlyphWindow()
-        if gw is None:
-            OpenGlyphWindow(glyph=self.font[newGlyphName])
-        else:
-            CurrentGlyphWindow().setGlyphByName(newGlyphName)
+        OpenGlyphWindow(glyph=self.font[newGlyphName])
     
     def getHeadGlyphFromRepo(self, glyphName):
         #filepath = self.getGlyphNameToFileNameMap()[glyphName]
