@@ -2,28 +2,33 @@ from string import split
 from os import remove
 from mojo.roboFont import version
 
-f = CurrentFont()
-tf = f.copy(showUI=False)
+from jkRFoTools.FontChooser import ProcessFonts
 
-for g in tf:
-    g.clear()
+def test_compilation(font):
+    temp_font = font.copy(showUI=False)
 
-myPath = f.path + "_compiletest.otf"
-result = tf.generate(myPath, "otf")
-tf.close()
+    for g in temp_font:
+        g.clear()
 
-lines = split(result, "\n")
+    myPath = font.path + "_compiletest.otf"
+    result = temp_font.generate(myPath, "otf")
+    temp_font.close()
 
-if version[:3] == "1.5":
-    checkLine = -3
-else:
-    checkLine = -1
+    lines = split(result, "\n")
 
-if lines[checkLine][:15] == "makeotf [Error]":
-    print "Font compilation failed."
-    for r in lines:
-        if r[:18] in ["makeotfexe [ERROR]", "makeotfexe [FATAL]"]:
-            print r[11:]
-else:
-    print "Font will compile successfully."
-    remove(myPath)
+    if version[:3] == "1.5":
+        checkLine = -3
+    else:
+        checkLine = -1
+
+    if lines[checkLine][:15] == "makeotf [Error]":
+        test_result = "ERROR: "
+        for r in lines:
+            if r[:18] in ["makeotfexe [ERROR]", "makeotfexe [FATAL]"]:
+                test_result += r[11:] + "; "
+    else:
+        test_result = "OK"
+        remove(myPath)
+    return test_result
+
+ProcessFonts("Test Compilation", test_compilation)
