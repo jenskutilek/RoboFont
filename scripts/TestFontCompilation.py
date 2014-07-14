@@ -9,6 +9,9 @@ def test_compilation(font):
 
     for g in temp_font:
         g.clear()
+    
+    if font.path is None:
+        return "ERROR: The font needs to be saved first."
 
     myPath = font.path + "_compiletest.otf"
     result = temp_font.generate(myPath, "otf")
@@ -22,10 +25,10 @@ def test_compilation(font):
         checkLine = -1
 
     if lines[checkLine][:15] == "makeotf [Error]":
-        test_result = "ERROR: "
+        test_result = ""
         for r in lines:
             if r[:18] in ["makeotfexe [ERROR]", "makeotfexe [FATAL]"]:
-                test_result += r[11:] + "; "
+                test_result += r[11:] + "\n"
     else:
         test_result = "OK"
         remove(myPath)
