@@ -5,6 +5,7 @@
 ## Version 0.2 by Jens Kutilek 2013-03-26
 ## Version 0.3 by Jens Kutilek 2013-04-06
 ## Version 0.4 by Jens Kutilek 2013-11-13
+## Version 0.5 by Jens Kutilek 2014-07-19
 ## http://www.netzallee.de/extra/robofont
 
 import vanilla
@@ -19,8 +20,7 @@ from fontTools.misc.bezierTools import calcCubicParameters, calcCubicPoints
 # for live preview:
 from mojo.UI import UpdateCurrentGlyphView
 from mojo.events import addObserver, removeObserver
-from MojoDrawingToolsPen import MojoDrawingToolsPen
-from mojo.drawingTools import save, restore, stroke, fill, strokeWidth
+from mojo.drawingTools import drawGlyph, save, restore, stroke, fill, strokeWidth
 
 extensionID = "de.netzallee.curveEQ"
 
@@ -131,11 +131,11 @@ class CurveEqualizer(BaseWindowController):
         self.curvatureFree = self.w.eqCurvatureSlider.get()
         
         addObserver(self, "_curvePreview", "draw")
-        #addObserver(self, "_curvePreview", "drawPreview")
         addObserver(self, "_curvePreview", "drawInactive")
         addObserver(self, "_currentGlyphChanged", "currentGlyphChanged")
         
         self.tmp_glyph = RGlyph()
+        #self._currentGlyphChanged({"glyph": CurrentGlyph()})
         UpdateCurrentGlyphView()
         
         self.setUpBaseWindowBehavior()
@@ -160,13 +160,20 @@ class CurveEqualizer(BaseWindowController):
         UpdateCurrentGlyphView()
     
     def _currentGlyphChanged(self, sender=None):
+        # FIXME: sender["glyph"] seems to contain the old glyph name, not the new one
+        #new_glyph = sender["glyph"]
+        #if new_glyph is None:
+        #    self.tmp_glyph = None
+        #else:
+        #    self.tmp_glyph.clear()
+        #    self.tmp_glyph.appendGlyph(new_glyph)
+        #print "Updated tmp_glyph: ", new_glyph
         UpdateCurrentGlyphView()
     
     def windowCloseCallback(self, sender):
         removeObserver(self, "draw")
         removeObserver(self, "drawInactive")
-        #removeObserver(self, "drawPreview")
-        removeObserver(self, "currentGlyphChanged")
+        #removeObserver(self, "currentGlyphChanged")
         setExtensionDefault("%s.%s" % (extensionID, "method"), self.w.eqMethodSelector.get())
         setExtensionDefault("%s.%s" % (extensionID, "curvature"), self.w.eqCurvatureSelector.get())
         setExtensionDefault("%s.%s" % (extensionID, "curvatureFree"), self.w.eqCurvatureSlider.get())
@@ -202,15 +209,12 @@ class CurveEqualizer(BaseWindowController):
             self.tmp_glyph.clear()
             self.tmp_glyph.appendGlyph(_doodle_glyph)
             self._eqSelected()
-            pen = MojoDrawingToolsPen(self.tmp_glyph, _doodle_glyph.getParent())
             save()
             stroke(0, 0, 0, 0.5)
             fill(None)
             strokeWidth(info["scale"])
-            self.tmp_glyph.draw(pen)
-            pen.draw()
+            drawGlyph(self.tmp_glyph)
             restore()
-            #UpdateCurrentGlyphView()
     
     
     # Equalizer methods
@@ -221,11 +225,7 @@ class CurveEqualizer(BaseWindowController):
         alpha = atan2(p1.y - p0.y, p1.x - p0.x)
         beta  = atan2(p2.y - p3.y, p2.x - p3.x)
         diff = alpha - beta
-        if degrees(abs(diff)) < 45:
-            print "BCP angle: %0.1f\xb0 - %0.1f\xb0 = %0.1f\xb0" % (degrees(alpha), degrees(beta), degrees(diff))
-            #print "BCP angle: %0.1f - %0.1f = %0.1f" % (alpha, beta, diff)
-            print "Bezier handles angle restriction in effect."
-        else:
+        if degrees(abs(diff)) >= 45:
             # check if both handles are on the same side of the curve
             if isOnLeft(p0, p3, p1) and isOnLeft(p0, p3, p2) or isOnRight(p0, p3, p1) and isOnRight(p0, p3, p2):
                 
@@ -262,8 +262,6 @@ class CurveEqualizer(BaseWindowController):
                 # move second control point
                 p2.x, p2.y = self.getNewCoordinates(p2, p3, p1, a)
                 
-            else:
-                print "Handles are not on the same side of the curve."
         return p1, p2
     
     def eqThirds(self, p0, p1, p2, p3):
@@ -328,25 +326,26 @@ class CurveEqualizer(BaseWindowController):
                     if reference_segment.selected and reference_segment.type == "curve":
                         # last point of the previous segment
                         p0 = modify_contour[i-1][-1]
-                        p1, p2, p3 = modify_segment.points
+                        if len(modify_segment.points) == 3:
+                            p1, p2, p3 = modify_segment.points
                         
-                        if self.method == "fl":
-                            p1, p2 = self.eqFL(p0, p1, p2, p3)
-                        elif self.method == "thirds":
-                            p1, p2 = self.eqThirds(p0, p1, p2, p3)
-                        elif self.method == "quad":
-                            p1, p2 = self.eqQuadratic(p0, p1, p2, p3)
-                        elif self.method == "adjust":
-                            p1, p2 = self.eqFL(p0, p1, p2, p3, self.curvature)
-                        elif self.method == "free":
-                            p1, p2 = self.eqFL(p0, p1, p2, p3, self.curvatureFree)
-                        else:
-                            print "WARNING: Unknown equalize method: %s" % self.method
-                        if sender is not None:
-                            p1.round()
-                            p2.round()
-            reference_glyph.update()
+                            if self.method == "free":
+                                p1, p2 = self.eqFL(p0, p1, p2, p3, self.curvatureFree)
+                            elif self.method == "fl":
+                                p1, p2 = self.eqFL(p0, p1, p2, p3)
+                            elif self.method == "thirds":
+                                p1, p2 = self.eqThirds(p0, p1, p2, p3)
+                            elif self.method == "quad":
+                                p1, p2 = self.eqQuadratic(p0, p1, p2, p3)
+                            elif self.method == "adjust":
+                                p1, p2 = self.eqFL(p0, p1, p2, p3, self.curvature)
+                            else:
+                                print "WARNING: Unknown equalize method: %s" % self.method
+                            if sender is not None:
+                                p1.round()
+                                p2.round()
             if sender is not None:
+                reference_glyph.update()
                 reference_glyph.performUndo()    
 
 OpenWindow(CurveEqualizer)
