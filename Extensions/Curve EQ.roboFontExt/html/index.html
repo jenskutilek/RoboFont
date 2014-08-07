@@ -26,7 +26,7 @@
 		<h1>Curve Equalizer</h1>
 		<p>Curve Equalizer helps you quickly balance the Bézier handles of a curve, or adjust the curvature to a fixed amount.</p>
 		<h2>Interface</h2>
-		<p><img src="dialog.png" width="214" height="190" alt=""></p>
+		<p><img src="dialog.png" width="214" height="212" alt=""></p>
 		<p>Select the curve adjustment method.</p>
 		<table>
 			<tr>
@@ -53,6 +53,10 @@
 				<td>Adjust free</td>
 				<td>Change the curvature interactively using the slider. This is particularly useful if you want to keep the current curvature, but balance the handles.</td>
 			</tr>
+			<tr>
+				<td>Hobby</td>
+				<td>Change the tension of the curves. This uses the spline algorithm by John D. Hobby, which is also used by Metafont to create harmonic curves.</td>
+			</tr>
 		</table>
 		<p>Click the «Equalize selected» button to apply the adjustment to the selected curves in the current glyph window.</p>
 		<h2>Known Issues</h2>
@@ -64,5 +68,6 @@
 		<p><img src="geometry.jpg" width="370" height="305" alt=""></p>
 		<hr>
 		<p>Curve Equalizer is © 2013 by Jens Kutilek.</p>
+		<p>The Hobby Spline code was sent in by Simon Egli with contributions by Juraj Sukop and Lasse Fister.</p>
 	</body>
 </html>
