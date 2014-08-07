@@ -1,16 +1,30 @@
-## Curve Equalizer
-## An extension for the RoboFont editor
-## Requires RoboFont 1.4
-## Version 0.1 by Jens Kutilek 2013-02-13
-## Version 0.2 by Jens Kutilek 2013-03-26
-## Version 0.3 by Jens Kutilek 2013-04-06
-## Version 0.4 by Jens Kutilek 2013-11-13
-## Version 0.5 by Jens Kutilek 2014-07-19
-## http://www.netzallee.de/extra/robofont
+"""
+Curve Equalizer
+
+An extension for the RoboFont editor
+
+Requires RoboFont 1.4
+
+Version history:
+0.1 by Jens Kutilek 2013-02-13
+0.2 by Jens Kutilek 2013-03-26
+0.3 by Jens Kutilek 2013-04-06
+0.4 by Jens Kutilek 2013-11-13
+0.5 by Jens Kutilek 2014-07-19
+
+0.6 by Jens Kutilek 2014-08-07
+    with Hobby Spline code contributed by
+    Juraj Sukop, Lasse Fister, Simon Egli
+    http://metapolator.com
+
+http://www.netzallee.de/extra/robofont
+"""
 
 import vanilla
 
-from math import sqrt, atan2, degrees, sin, cos, pi
+from cmath import e, sqrt
+from math import atan2, degrees, sin, cos, pi, radians
+from math import sqrt as msqrt
 from defconAppKit.windows.baseWindow import BaseWindowController
 from mojo.extensions import getExtensionDefault, setExtensionDefault
 
@@ -47,11 +61,31 @@ def isCollinear(a, b, c):
 
 def distance(p0, p1, doRound=False):
     # Calculate the distance between two points
-    d = sqrt((p0.x - p1.x) ** 2 + (p0.y - p1.y) ** 2)
+    d = msqrt((p0.x - p1.x) ** 2 + (p0.y - p1.y) ** 2)
     if doRound:
         return int(round(d))
     else:
         return d
+
+# helper functions for Hobby Splines
+
+def arg(x): # phase
+    return atan2(x.imag, x.real)
+    
+def hobby(theta, phi):
+    st, ct = sin(theta), cos(theta)
+    sp, cp = sin(phi), cos(phi)
+    return \
+            (2 + sqrt(2) * (st - 1/16*sp) * (sp - 1/16*st) * (ct - cp)) / \
+            (3 * (1 + 0.5*(sqrt(5) - 1) * ct + 0.5*(3 - sqrt(5)) * cp))
+        
+def controls(z0, w0, alpha, beta, w1, z1):
+    theta = arg(w0 / (z1 - z0))
+    phi = arg((z1 - z0) / w1)
+    u = z0 + e**(0+1j * theta) * (z1 - z0) * hobby(theta, phi) / alpha
+    v = z1 - e**(0-1j * phi) * (z1 - z0) * hobby(phi, theta) / beta
+    return u, v
+
 
 
 
@@ -65,6 +99,7 @@ class CurveEqualizer(BaseWindowController):
             2: "quad",
             3: "adjust",
             4: "free",
+            5: "hobby",
         }
         
         self.methodNames = [
@@ -72,7 +107,8 @@ class CurveEqualizer(BaseWindowController):
             "Rule of thirds",
             "TT (experimental)",
             "Adjust fixed:",
-            "Adjust free:"
+            "Adjust free:",
+            "Hobby:",
         ]
         
         self.curvatures = {
@@ -83,18 +119,18 @@ class CurveEqualizer(BaseWindowController):
             4: 0.652,
         }
         
-        height = 160
+        height = 182
         
         self.w = vanilla.FloatingWindow((200, height), "Curve EQ")
         
         y = 8
-        self.w.eqMethodSelector = vanilla.RadioGroup((10, y, -10, 108),
+        self.w.eqMethodSelector = vanilla.RadioGroup((10, y, -10, 140),
             titles = self.methodNames,
             callback=self._changeMethod,
             sizeStyle="small"
         )
         
-        y -= 91
+        y -= 109
         self.w.eqCurvatureSelector = vanilla.RadioGroup((104, y, -8, 14),
             isVertical = False,
             titles = ["", "", "", "", ""],
@@ -102,12 +138,21 @@ class CurveEqualizer(BaseWindowController):
             sizeStyle="small"
         )
         
-        y += 22
-        self.w.eqCurvatureSlider = vanilla.Slider((104, y, -8, 14),
+        y += 21
+        self.w.eqCurvatureSlider = vanilla.Slider((104, y, -8, 17),
             callback=self._changeCurvatureFree,
             minValue=0.5,
             maxValue=1.0,
             #value=self.curvatures[self.w.eqCurvatureSelector.get()],
+            sizeStyle="small",
+        )
+        
+        y += 27
+        self.w.eqHobbyTensionSlider = vanilla.Slider((104, y, -8, 17),
+            tickMarkCount=5,
+            callback=self._changeTension,
+            minValue=0.5,
+            maxValue=1.0,
             sizeStyle="small",
         )
         
@@ -129,6 +174,10 @@ class CurveEqualizer(BaseWindowController):
         # default curvature for slider
         self.w.eqCurvatureSlider.set(getExtensionDefault("%s.%s" %(extensionID, "curvatureFree"), 0.5))
         self.curvatureFree = self.w.eqCurvatureSlider.get()
+        
+        # default curvature for Hobby's spline tension slider
+        self.w.eqHobbyTensionSlider.set(getExtensionDefault("%s.%s" %(extensionID, "tension"), 0.5))
+        self.tension = self.w.eqHobbyTensionSlider.get()
         
         addObserver(self, "_curvePreview", "draw")
         addObserver(self, "_curvePreview", "drawInactive")
@@ -159,6 +208,10 @@ class CurveEqualizer(BaseWindowController):
         self.curvatureFree = sender.get()
         UpdateCurrentGlyphView()
     
+    def _changeTension(self, sender):
+        self.tension = sender.get()
+        UpdateCurrentGlyphView()
+    
     def _currentGlyphChanged(self, sender=None):
         # FIXME: sender["glyph"] seems to contain the old glyph name, not the new one
         #new_glyph = sender["glyph"]
@@ -177,6 +230,7 @@ class CurveEqualizer(BaseWindowController):
         setExtensionDefault("%s.%s" % (extensionID, "method"), self.w.eqMethodSelector.get())
         setExtensionDefault("%s.%s" % (extensionID, "curvature"), self.w.eqCurvatureSelector.get())
         setExtensionDefault("%s.%s" % (extensionID, "curvatureFree"), self.w.eqCurvatureSlider.get())
+        setExtensionDefault("%s.%s" % (extensionID, "tension"), self.w.eqHobbyTensionSlider.get())
         super(CurveEqualizer, self).windowCloseCallback(sender)
         UpdateCurrentGlyphView()
     
@@ -185,20 +239,25 @@ class CurveEqualizer(BaseWindowController):
         if self.method == "adjust":
             self.w.eqCurvatureSelector.enable(True)
             self.w.eqCurvatureSlider.enable(False)
+            self.w.eqHobbyTensionSlider.enable(False)
         elif self.method == "free":
             self.w.eqCurvatureSelector.enable(False)
             self.w.eqCurvatureSlider.enable(True)
+            self.w.eqHobbyTensionSlider.enable(False)
+        elif self.method == "hobby":
+            self.w.eqCurvatureSelector.enable(False)
+            self.w.eqCurvatureSlider.enable(False)
+            self.w.eqHobbyTensionSlider.enable(True)
         else:
             self.w.eqCurvatureSelector.enable(False)
             self.w.eqCurvatureSlider.enable(False)
+            self.w.eqHobbyTensionSlider.enable(False)
     
     def getNewCoordinates(self, targetPoint, referencePoint, alternateReferencePoint, distance):
         if targetPoint.y == referencePoint.y and targetPoint.x == referencePoint.x:
             phi = atan2(alternateReferencePoint.y - referencePoint.y, alternateReferencePoint.x - referencePoint.x)
         else:
             phi = atan2(targetPoint.y - referencePoint.y, targetPoint.x - referencePoint.x)
-        #print degrees(phi)
-        #print "Move P1", p1.x, p1.y,
         x = referencePoint.x + cos(phi) * distance
         y = referencePoint.y + sin(phi) * distance
         return (x, y)
@@ -211,6 +270,9 @@ class CurveEqualizer(BaseWindowController):
             self._eqSelected()
             save()
             stroke(0, 0, 0, 0.5)
+            #if self.method == "hobby":
+            #    fill(1, 0, 0, 0.9)
+            #else:
             fill(None)
             strokeWidth(info["scale"])
             drawGlyph(self.tmp_glyph)
@@ -241,17 +303,9 @@ class CurveEqualizer(BaseWindowController):
                 
                 beta = pi - alpha - gamma
                 
-                #print "alpha =", degrees(alpha1), "-", degrees(alpha2), "=", degrees(alpha)
-                #print "gamma =", degrees(gamma1), "-", degrees(gamma2), "=", degrees(gamma)
-                #print "beta =", degrees(beta)
-                
                 b = abs(distance(p0, p3))
                 a = b * sin(alpha) / sin(beta)
                 c = b * sin(gamma) / sin(beta)
-                
-                #print "a =", a
-                #print "b =", b
-                #print "c =", c
                 
                 c = c * curvature
                 a = a * curvature
@@ -261,7 +315,7 @@ class CurveEqualizer(BaseWindowController):
                 
                 # move second control point
                 p2.x, p2.y = self.getNewCoordinates(p2, p3, p1, a)
-                
+        
         return p1, p2
     
     def eqThirds(self, p0, p1, p2, p3):
@@ -305,6 +359,19 @@ class CurveEqualizer(BaseWindowController):
         #print p0, p1, p2, p3
         return p1, p2
     
+    def eqSpline(self, p0, p1, p2, p3, tension=1.75):
+        # Hobby's splines with given tension
+        delta0 = complex(p1.x, p1.y) - complex(p0.x, p0.y)  
+        rad0 = atan2(delta0.real, delta0.imag)
+        w0 = complex(sin(rad0), cos(rad0))
+        delta1 = complex(p3.x, p3.y) - complex(p2.x, p2.y) 
+        rad1 = atan2(delta1.real, delta1.imag)
+        w1 = complex(sin(rad1), cos(rad1))
+        alpha, beta = 1 * tension, 1 * tension
+        u, v = controls(complex(p0.x, p0.y), w0, alpha, beta, w1, complex(p3.x, p3.y))
+        p1.x, p1.y = u.real, u.imag
+        p2.x, p2.y = v.real, v.imag
+        return p1, p2
     
     # The main method, check which EQ should be applied and do it (or just apply it on the preview glyph)
     
@@ -339,6 +406,8 @@ class CurveEqualizer(BaseWindowController):
                                 p1, p2 = self.eqQuadratic(p0, p1, p2, p3)
                             elif self.method == "adjust":
                                 p1, p2 = self.eqFL(p0, p1, p2, p3, self.curvature)
+                            elif self.method == "hobby":
+                                p1, p2 = self.eqSpline(p0, p1, p2, p3, self.tension)
                             else:
                                 print "WARNING: Unknown equalize method: %s" % self.method
                             if sender is not None:
