@@ -1,12 +1,27 @@
-# Glyph Width Histogram
+#MenuTitle: Glyph Width Histogram
 # by Jens 2014-09-08
 
 from math import ceil
 import vanilla
 from defconAppKit.windows.baseWindow import BaseWindowController
-from mojo.canvas import Canvas
-from mojo.drawingTools import *
-from lib.tools.defaults import getDefault
+import traceback
+
+try:
+    import GlyphsApp
+    in_glyphs = True
+except:
+    in_glyphs = False
+
+if in_glyphs:
+    from robofab.world import CurrentFont
+    from feind import drawing
+    from feind.defaults import getDefault
+    from feind.vanilla import Canvas
+else:
+    from mojo.canvas import Canvas
+    import mojo.drawingTools as drawing
+    from lib.tools.defaults import getDefault
+
 
 
 class UnitizationInfo(object):
@@ -161,7 +176,7 @@ class HistogramUI(BaseWindowController):
         self.show_glyphs = True
         
         y = 10
-        self.w = vanilla.Window((window_width, window_height), "Glyph Width Histogram")
+        self.w = vanilla.FloatingWindow((window_width, window_height), "Glyph Width Histogram")
         self.w.histogram = Canvas((histogram_x_offset, histogram_y_offset, -10, self.histogram_height),
                                 canvasSize=(self.histogram_width, self.histogram_height),
                                 hasHorizontalScroller=False,
@@ -279,14 +294,21 @@ class HistogramUI(BaseWindowController):
         self.calculate_histogram()
     
     def _updateButtonCallback(self, sender=None):
-        charset_index = self.w.charset_selection.get()
-        self.update_charset_selection()
-        if charset_index <= len(self.w.charset_selection.getItems()):
-            self.w.charset_selection.set(charset_index)
-        else:
-            self.w.charset_selection.set(-1)
-        self.glyphs = self.get_glyphnames_for_histogram()
-        self.calculate_histogram()
+        print "__updateButtonCallback"
+        try:
+            charset_index = self.w.charset_selection.get()
+            self.update_charset_selection()
+            if charset_index <= len(self.w.charset_selection.getItems()):
+                self.w.charset_selection.set(charset_index)
+            else:
+                self.w.charset_selection.set(-1)
+            self.glyphs = self.get_glyphnames_for_histogram()
+            self.calculate_histogram()
+            self.w.histogram.update()
+        except:
+            print "__updateButtonCallback Error"
+            print traceback.format_exc()
+            
     
     def update_charset_selection(self):
         self.charsets = getDefault("charsets")
@@ -301,6 +323,7 @@ class HistogramUI(BaseWindowController):
         elif mode == 1:
             #print "Analyze All Glyphs"
             names = font.glyphOrder
+            print "__Names:", names
         else:
             #print "Analyze Charset"
             all_glyphs = font.glyphOrder
@@ -309,109 +332,141 @@ class HistogramUI(BaseWindowController):
         return names
     
     def calculate_histogram(self, sender=None):
-        #print "calculate_histogram"
-        font = CurrentFont()
-        #names = self.get_glyphnames_for_histogram()
-        histogram = {}
-        max_width = 0
-        for name in self.glyphs:
-            width = font[name].width
-            if width > max_width:
-                max_width = width
-            if width in histogram:
-                histogram[width].append(name)
-            else:
-                histogram[width] = [name]
-        self.max_width = max_width
-        self.histogram = histogram
+        print "calculate_histogram"
+        try:
+            font = CurrentFont()
+            #names = self.get_glyphnames_for_histogram()
+            histogram = {}
+            max_width = 0
+            for name in self.glyphs:
+                width = font[name].width
+                if width > max_width:
+                    max_width = width
+                if width in histogram:
+                    histogram[width].append(name)
+                else:
+                    histogram[width] = [name]
+            self.max_width = max_width
+            self.histogram = histogram
+        except Exception, err:
+            print "calculate_histogram Error"
+            print traceback.format_exc()
+        print "calculate_histogram"
         #print self.histogram
         self.w.histogram.update()
     
     def draw(self):
         # canvas draw callback
-        save()
+        drawing.save()
         self._drawGrid()
-        restore()
+        drawing.restore()
         font = CurrentFont()
         if self.show_fixed and self.system is not None and self.system.fixed_units:
             # display the fixed widths of the current unitization system
             self.draw_histogram(font, self.system.upm, (0, 0, 1, 0.5), True, histogram=self.system.fixed_units)
         # draw the histogram for the current font
+        print "__font:", font
+        print "__font.info:", font.info
         self.draw_histogram(font, font.info.unitsPerEm, (1, 0, 0, 1), True)
     
     def draw_histogram(self, font, upm, color, show_glyphs=False, histogram=None):
         if histogram is None:
-            histogram = self.histogram
-        save()
-        fill(1, 0.5, 0.2, 1.0)
-        stroke(color[0], color[1], color[2], color[3])
-        for width in sorted(histogram.keys()):
-            num = len(histogram[width])
-            x = 10 + width * self.histogram_width / (upm * self.ems_horizontal)
-            save()
-            if show_glyphs:
-                save()
-                fill(color[0], color[1], color[2], 0.2)
-                fontsize(self.scale_vertical)
-                for i in range(len(histogram[width])):
-                    glyph_name = histogram[width][i]
-                    if glyph_name in font:
-                        u = font[glyph_name].unicode
-                        if u:
-                            text("%s" % unichr(u), x + 4, 18 + i * self.scale_vertical)
+            try:
+                histogram = self.histogram
+            except Exception, err:
+                self.calculate_histogram
+        drawing.save()
+        if histogram is None:
+            try:
+                histogram = self.histogram
+            except:
+                pass
+        if histogram is None:
+            print "__no Histogram"
+            return
+        drawing.fill(1, 0.5, 0.2, 1.0)
+        drawing.stroke(color[0], color[1], color[2], color[3])
+        try:
+            for width in sorted(histogram.keys()):
+                num = len(histogram[width])
+                x = 10 + width * self.histogram_width / (upm * self.ems_horizontal)
+                drawing.save()
+                if show_glyphs:
+                    drawing.save()
+                    drawing.fill(color[0], color[1], color[2], 0.2)
+                    drawing.fontsize(self.scale_vertical)
+                    for i in range(len(histogram[width])):
+                        glyph_name = histogram[width][i]
+                        if glyph_name in font:
+                            u = font[glyph_name].unicode
+                            if u:
+                                drawing.text("%s" % unichr(u), x + 4, 18 + i * self.scale_vertical)
+                            else:
+                                drawing.text("%s" % glyph_name, x + 4, 18 + i * self.scale_vertical)
                         else:
-                            text("%s" % glyph_name, x + 4, 18 + i * self.scale_vertical)
-                    else:
-                        text("%s" % glyph_name, x + 4, 18 + i * self.scale_vertical)
-                restore()
-                strokewidth(2)
-            else:
-                strokewidth(6)
-            # draw bars
-            line(x, 20, x, 20 + num * self.scale_vertical)
-            strokewidth(0)
-            text("%s" % (num), x - 3 * len(str(num)), 22 + num * self.scale_vertical)
-            restore()
-        restore()
+                            drawing.text("%s" % glyph_name, x + 4, 18 + i * self.scale_vertical)
+                    drawing.restore()
+                    drawing.strokewidth(2)
+                else:
+                    drawing.strokewidth(6)
+                # draw bars
+                drawing.line(x, 20, x, 20 + num * self.scale_vertical)
+                drawing.strokewidth(0)
+                drawing.text("%s" % (num), x - 3 * len(str(num)), 22 + num * self.scale_vertical)
+                drawing.restore()
+        except Exception, err:
+            print sys.exc_info()[0]
+            print traceback.format_exc()
+        drawing.restore()
     
     def _drawGrid(self):
         label_every = 1
         if self.units > 24:
             label_every = 2
-        save()
-        strokeWidth(0)
-        stroke(None)
-        fill(0.88, 0.92, 0.98)
+        drawing.save()
+        drawing.strokeWidth(0)
+        drawing.stroke(None)
+        drawing.fill(0.88, 0.92, 0.98)
         if self.system is not None:
             if self.system.min_units is not None:
-                rect(0, 0, 10 + self.system.min_units * self.histogram_width / (self.units * self.ems_horizontal), self.histogram_height)
+                drawing.rect(0, 0, 10 + self.system.min_units * self.histogram_width / (self.units * self.ems_horizontal), self.histogram_height)
             if self.system.max_units is not None:
-                rect(10 + self.system.max_units * self.histogram_width / (self.units * self.ems_horizontal), 0, self.histogram_width, self.histogram_height)
+                drawing.rect(10 + self.system.max_units * self.histogram_width / (self.units * self.ems_horizontal), 0, self.histogram_width, self.histogram_height)
         
-        strokeWidth(1.0)
-        stroke(0.8, 0.8, 0.8)
-        fill(0.6, 0.6, 0.6)
+        drawing.strokeWidth(1.0)
+        drawing.stroke(0.8, 0.8, 0.8)
+        drawing.fill(0.6, 0.6, 0.6)
         for u in range(0, int(ceil(self.units * self.ems_horizontal))):
             x = 10 + u * self.histogram_width / (self.units * self.ems_horizontal)
             if u == self.units:
                 # mark the full em
-                stroke(0, 0, 0)
-                line(x, 20, x, self.histogram_height-10)
-                strokeWidth(0)
-                text("1 em", x + 4, self.histogram_height - 21)
-                strokeWidth(1.0)
+                drawing.stroke(0, 0, 0)
+                drawing.line(x, 20, x, self.histogram_height-10)
+                drawing.strokeWidth(0)
+                drawing.text("1 em", x + 4, self.histogram_height - 21)
+                drawing.strokeWidth(1.0)
             elif u % 10 == 0:
                 # make every 10th line darker
-                stroke(0.5, 0.5, 0.5)
-                line(x, 20, x, self.histogram_height - 20)
+                drawing.stroke(0.5, 0.5, 0.5)
+                drawing.line(x, 20, x, self.histogram_height - 20)
             else:
-                stroke(0.8, 0.8, 0.8)
-                line(x, 20, x, self.histogram_height - 30)
+                drawing.stroke(0.8, 0.8, 0.8)
+                drawing.line(x, 20, x, self.histogram_height - 30)
             if u % label_every == 0:
-                strokeWidth(0)
-                text("%s" % (u), x - 3 * len(str(u)), 5)
-        restore()
+                drawing.strokeWidth(0)
+                drawing.text("%s" % (u), x - 3 * len(str(u)), 5)
+        drawing.restore()
 
 
 if __name__ == "__main__":
-    OpenWindow(HistogramUI)
+    print "__Main Start"
+    try:
+        if in_glyphs:
+            HistogramUI()
+        else:
+            OpenWindow(HistogramUI)
+    except:
+        print "except"
+        print sys.exc_info()[0]
+        
+    print "__Main End"
