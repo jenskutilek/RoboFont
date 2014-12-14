@@ -30,9 +30,9 @@
 	<key>requiresVersionMinor</key>
 	<string>4</string>
 	<key>timeStamp</key>
-	<real>1412957514.0</real>
+	<real>1418567358.0</real>
 	<key>version</key>
-	<string>0.7</string>
+	<string>0.7.1</string>
 	<key>repository</key>
 	<string>jenskutilek/Curve-Equalizer</string>
 	<key>extensionPath</key>
