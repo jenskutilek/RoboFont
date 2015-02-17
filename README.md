@@ -6,7 +6,7 @@ Some scripts for the RoboFont editor that you may find useful. Use at your own r
 Curve Equalizer
 ---------------
 
-Quickly balance the Bézier handles of a curve, or change its curvature.
+Quickly balance the Bézier handles of a curve, or change its curvature. Available from: https://github.com/jenskutilek/Curve-Equalizer
 
 ChangeUPM.py
 ------------
