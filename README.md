@@ -3,10 +3,12 @@ RoboFont
 
 Some scripts for the RoboFont editor that you may find useful. Use at your own risk. MIT-licensed.
 
-Curve Equalizer
+Extensions
 ---------------
 
-Quickly balance the Bézier handles of a curve, or change its curvature. Available from: https://github.com/jenskutilek/Curve-Equalizer
+* Curve Equalizer: https://github.com/jenskutilek/Curve-Equalizer
+* Rotated Glyph Preview
+* UFO Cleaner
 
 ChangeUPM.py
 ------------
@@ -26,6 +28,8 @@ All glyphs are cleared, so this is much faster than regular generation where you
 wait for remove overlaps, decompose, etc.
 
 If any errors occur, the error messages are displayed in the output window.
+
+This script is currently broken in RoboFont 1.6.
 
 TestInstallAllOpen.py
 ---------------------
