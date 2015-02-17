@@ -14,9 +14,9 @@
 		</dict>
 	</array>
 	<key>developer</key>
-	<string>Netzallee</string>
+	<string>Jens Kutilek</string>
 	<key>developerURL</key>
-	<string>http://www.netzallee.de/extra/robofont</string>
+	<string>http://www.kutilek.de/</string>
 	<key>html</key>
 	<false/>
 	<key>launchAtStartUp</key>
@@ -30,12 +30,13 @@
 	<key>requiresVersionMinor</key>
 	<string>5</string>
 	<key>timeStamp</key>
-	<real>1383950820.020776</real>
+	<real>1424194713.0</real>
 	<key>version</key>
-	<string>1.2</string>
-	<key>repository</key>
-	<string>jenskutilek/RoboFont</string>
-	<key>extensionPath</key>
-	<string>Extensions/GlyphRotator.roboFontExt</string>
+	<string>1.3</string>
+	<key>com.robofontmechanic.Mechanic</key>
+	<dict>
+		<key>repository</key>
+		<string>jenskutilek/RoboFont</string>
+	</dict>
 </dict>
 </plist>

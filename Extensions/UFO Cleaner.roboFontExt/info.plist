@@ -30,12 +30,13 @@
 	<key>requiresVersionMinor</key>
 	<string>4</string>
 	<key>timeStamp</key>
-	<real>1405785328.0</real>
+	<real>1424194812.0</real>
 	<key>version</key>
-	<string>0.3</string>
-	<key>repository</key>
-	<string>jenskutilek/RoboFont</string>
-	<key>extensionPath</key>
-	<string>Extensions/UFO Cleaner.roboFontExt</string>
+	<string>0.4</string>
+	<key>com.robofontmechanic.Mechanic</key>
+	<dict>
+		<key>repository</key>
+		<string>jenskutilek/RoboFont</string>
+	</dict>
 </dict>
 </plist>
