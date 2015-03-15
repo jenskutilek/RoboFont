@@ -1,3 +1,4 @@
+# Run this script in the RoboFont Drawbot extension
 from math import sin, pi, sqrt
 from robofab.pens.filterPen import flattenGlyph
 
@@ -10,12 +11,12 @@ def distance(p0, p1, doRound=False):
     else:
         return d
 
+
 class AIFFVisualize(object):
     def __init__(self, font=None):
         self.set_font(font)
         self.x_offset = 30
         self.y_offset = 280
-        self.mark_fill = False
         self.size = (1920, 1080)
         self.scale = 1
     
@@ -51,20 +52,6 @@ class AIFFVisualize(object):
             self.asc = 750
             self.angle = 0
     
-    def _drawMetrics(self, glyph):
-        save()
-        stroke(0.7)
-        w = glyph.width
-        line((0, self.desc), (0, self.asc))
-        if w != 0:
-            line((0, self.desc), (w, 0 + self.desc))
-            line((0, 0), (w, 0))
-            line((0, self.x_height), (w, 0 + self.x_height))
-            line((0, self.cap_height), (w, 0 + self.cap_height))
-            line((0, self.asc), (w, 0 + self.asc))
-            line((w, self.desc), (w, self.asc))
-        restore()
-    
     def draw(self, glyph_names=[]):
         if glyph_names == []:
             self.font.glyphOrder
@@ -81,9 +68,8 @@ class AIFFVisualize(object):
 
                 x_offset = int(round((self.size[0] - glyph.width * self.scale) / 2))
                 scale(self.scale)
-                #self._drawMetrics(glyph)
+
                 num_steps = max([len(contour) for contour in audio_glyph])
-                print "Steps:", num_steps
                 num_frames = 50
                 
                 # cache wave forms for drawing: make empty dict with
@@ -102,9 +88,8 @@ class AIFFVisualize(object):
                     for contour_index in range(len(audio_glyph)):
                         contour = audio_glyph[contour_index]
                         if len(contour) > 1:
+                            # calculate bounding box and draw a line from center to point
                             bbox = contour.box
-                            # if bbox is None:
-                            #    break
                             pCenter = ((bbox[0] + bbox[2])/2, (bbox[1] + bbox[3])/2)
                             segment_index = i * int(round(len(contour) / num_frames)) % len(contour)
                             p = contour[segment_index].points[-1]
@@ -124,11 +109,12 @@ class AIFFVisualize(object):
                             
                             translate(-x_offset, -self.y_offset)
                             
+                            # draw wave forms
+                            
                             wave_x = self.size[0] / num_frames * i + 5 * contour_index + 10
                             wave_forms[contour_index].append(
                                 ((wave_x, 0), (wave_x, distance(pCenter, (p.x, p.y))))
                             )
-                            #print wave_forms
                             for a, b in wave_forms[contour_index]:
                                 line(a, b)
                             restore()
