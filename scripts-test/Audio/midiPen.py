@@ -1,5 +1,11 @@
-from fontTools.pens.basePen import AbstractPen
 from midi.MidiOutFile import MidiOutFile
+
+"""
+Install the Python midi module from:
+http://old.mxm.dk/products/public/pythonmidi/
+"""
+
+from fontTools.pens.basePen import AbstractPen
 from math import sqrt
 #from robofab.objects.objectsRF import RPoint
 
