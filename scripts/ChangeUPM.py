@@ -1,7 +1,6 @@
 # Change upm
 # Jens Kutilek 2013-01-02
 
-from robofab.interface.all.dialogs import AskString
 from mojo.roboFont import version
 
 def scalePoints(glyph, factor):
@@ -49,7 +48,7 @@ def changeUPM(font, factor, roundCoordinates=True):
     for g in font:
         scaleGlyph(g, factor)
         for guide in g.guides:
-            # another thing that doesn't work in RoboFont 1.4
+            # another thing that doesn't work in RoboFont 1.4 - 1.5.1
             guide.x *= factor
             guide.y *= factor
     
@@ -66,10 +65,10 @@ def changeUPM(font, factor, roundCoordinates=True):
     if font.kerning:
         font.kerning.scale(factor)
         if roundCoordinates:
-            if version != "1.4":
+            if not version in ["1.4", "1.5", "1.5.1"]:
                 font.kerning.round(1)
             else:
-                print "WARNING: kerning values cannot be rounded to integer in RoboFont 1.4."
+                print "WARNING: kerning values cannot be rounded to integer in this RoboFont version"
     
     # TODO: Change positioning feature code?
     
@@ -84,23 +83,25 @@ def changeUPM(font, factor, roundCoordinates=True):
     
     font.update()
 
+if __name__ == "__main__":
+    from robofab.interface.all.dialogs import AskString
+    
+    print "Change Units Per Em"
 
-print "Change Units Per Em"
-
-if CurrentFont() is not None:
-    oldUpm = CurrentFont().info.unitsPerEm
-    newUpm = CurrentFont().info.unitsPerEm
-    try:
-        newUpm = int(AskString("New units per em size?", oldUpm))
-    except:
-        pass
-    if newUpm == oldUpm:
-        print "  Not changing upm size."
+    if CurrentFont() is not None:
+        oldUpm = CurrentFont().info.unitsPerEm
+        newUpm = CurrentFont().info.unitsPerEm
+        try:
+            newUpm = int(AskString("New units per em size?", oldUpm))
+        except:
+            pass
+        if newUpm == oldUpm:
+            print "  Not changing upm size."
+        else:
+            factor = float(newUpm) / oldUpm        
+            print "  Scaling all font measurements by", factor
+            changeUPM(CurrentFont(), factor)
     else:
-        factor = float(newUpm) / oldUpm        
-        print "  Scaling all font measurements by", factor
-        changeUPM(CurrentFont(), factor)
-else:
-    print "  Open a font first to change upm, please."
+        print "  Open a font first to change upm, please."
 
-print "  Done."
+    print "  Done."
