@@ -37,6 +37,8 @@
 	<dict>
 		<key>repository</key>
 		<string>jenskutilek/RoboFont</string>
+		<key>summary</key>
+		<string>A glyph preview window that can be freely rotated.</string>
 	</dict>
 </dict>
 </plist>

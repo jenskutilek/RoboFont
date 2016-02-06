@@ -37,6 +37,8 @@
 	<dict>
 		<key>repository</key>
 		<string>jenskutilek/RoboFont</string>
+		<key>summary</key>
+		<string>Display and delete hidden data in your UFOs.</string>
 	</dict>
 </dict>
 </plist>
