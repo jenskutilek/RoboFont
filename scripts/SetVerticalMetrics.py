@@ -23,19 +23,18 @@ minY = 0
 maxG = "" # Glyphnamen
 minG = ""
 
+maxF = "" # Fontnamen
+minF = ""
+
 ignored = "" # ignorierte Glyphnamen
 
 # Descender-Wert soll aus dieser Liste von Glyphen ermittelt werden
 descenderGlyphNames = ["g", "j", "p", "q", "y"]
 
 # Schleife ueber die geoeffneten Fonts
-for i in range(len(AllFonts())):
-	# erzeuge eine Kopie des Fonts mit dem Index i
-	# (weil Composites aufgeloest werden, aber der Originalfont nicht veraendert werden soll)
-	fTemp = AllFonts()[i].copy()
-	 
+for f in AllFonts():
 	# Schleife ueber die Glyphen des kopierten Fonts
-	for g in fTemp:
+	for g in f:
 		if (g.name in vMetricsExcludeGlyphs) or (g.note == "vMetricsIgnore"):
 			# Wenn Glyphname auf Liste der zu ignorierenden Glyphen steht, 
 			# oder eine Glyphnote "vMetricsIgnore" enthaelt, notiere nur den
@@ -48,15 +47,17 @@ for i in range(len(AllFonts())):
 				# Y-Koordinate des aktuellen Glyphen ist groesser als vorheriger Wert
 				maxY = b[3] # merke den neuen Maximalwert
 				maxG = g.name # merke auch den Glyphnamen
+				maxF = "%s %s" % (f.info.familyName, f.info.styleName)
 	# Fuer den Descender-Wert: Schleife ueber Liste "descenderGlyphNames"
 	for n in descenderGlyphNames:
-		if n in fTemp.keys():
+		if n in f:
 			# Glyph ist im Font enthalten
-			b = fTemp[n].box
+			b = f[n].box
 			if (b is not None) and (b[1] < minY):
 				# Y-Koordinate des aktuellen Glyphen ist kleiner als vorheriger Wert
 				minY = b[1] # merke den neuen Minimalwert
-				minG = g.name # merke auch den Glyphnamen
+				minG = f[n].name # merke auch den Glyphnamen
+				minF = "%s %s" % (f.info.familyName, f.info.styleName)
 
 # Plausibilitaetspruefung des Descenderwerts
 upm = CurrentFont().info.unitsPerEm
@@ -81,8 +82,8 @@ os2WinDescent    = -1 * hheaDescender
 
 
 # Alle Werte ins Output-Fenster schreiben
-print "\nMin:            %5d (%s)" % (minY, minG)
-print "Max:            %5d (%s)" % (maxY, maxG)
+print "\nMin:            %5d (%s, %s)" % (minY, minG, minF)
+print "Max:            %5d (%s, %s)" % (maxY, maxG, maxF)
 print "UPM:            %5d" % upm
 print "---------------------"
 print "Ascender:       %5d" % vAscender
