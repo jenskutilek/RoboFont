@@ -3,6 +3,7 @@
 from vanilla import FloatingWindow, Slider
 from mojo.glyphPreview import GlyphPreview
 from GlyphProcessor import GlyphProcessorUI
+from fontTools.misc.transform import Identity
 
 
 class RotatedGlyphPreview(GlyphProcessorUI):
@@ -63,10 +64,48 @@ class RotatedGlyphPreview(GlyphProcessorUI):
             _rotation = 0
         self.settings["rotation"] = _rotation
         self._draw()
-    
+
+    def _deepAppendGlyph(self, glyph, gToAppend, font, offset=(0, 0)):
+        if not gToAppend.components:
+            glyph.appendGlyph(gToAppend, offset)
+        else:
+            for component in gToAppend.components:
+                if component.baseGlyph not in font.keys():
+                    # avoid traceback in the case where the selected glyph
+                    # is referencing a component whose glyph is not in the font
+                    continue
+
+                compGlyph = font[component.baseGlyph].copy()
+
+                if component.transformation != (1, 0, 0, 1, 0, 0):
+                    # if component is skewed and/or is shifted:
+                    matrix = component.transformation[0:4]
+                    if matrix != (1, 0, 0, 1):  # if component is skewed
+                        transformObj = Identity.transform(matrix + (0, 0))
+                        # ignore the original component's shifting values
+                        compGlyph.transform(transformObj)
+
+                # add the two tuples of offset:
+                totalOffset = map(sum, zip(component.offset, offset))
+                glyph.appendGlyph(compGlyph, totalOffset)
+
+            for contour in gToAppend:
+                glyph.appendContour(contour, offset)
+
+        # if the assembled glyph still has components, recursively
+        # remove and replace them 1-by-1 by the glyphs they reference:
+        if glyph.components:
+            nestedComponent = glyph.components[-1]
+            glyph.removeComponent(nestedComponent)
+            glyph = self._deepAppendGlyph(glyph, font[nestedComponent.baseGlyph], font, nestedComponent.offset)
+
+        return glyph
+
     def _draw(self):
-        if CurrentGlyph() is not None:
-            self.previewGlyph = CurrentGlyph().copy()
+        cG = CurrentGlyph()
+        if cG is not None:
+            self.previewGlyph = self._deepAppendGlyph(RGlyph(), cG, CurrentFont())
+            self.previewGlyph.width = cG.width
             self.previewGlyph.scale((self._scale, self._scale))
             self.previewGlyph.width *= self._scale
             self.previewGlyph.rotate(self.settings["rotation"], (self.previewGlyph.width/2.0, self._y))
