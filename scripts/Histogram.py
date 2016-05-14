@@ -8,20 +8,18 @@ import traceback
 
 try:
     import GlyphsApp
-    in_glyphs = True
+    env = "glyphs"
 except:
-    in_glyphs = False
+    env = "robofont"
 
-if in_glyphs:
-    from robofab.world import CurrentFont
-    from feind import drawing
-    from feind.defaults import getDefault
-    from feind.vanilla import Canvas
-else:
+if env == "robofont":
     from mojo.canvas import Canvas
     import mojo.drawingTools as drawing
     from lib.tools.defaults import getDefault
-
+elif env == "glyphs":
+    from robofab.world import CurrentFont
+    from feind.vanilla import Canvas
+    from feind import drawing
 
 
 class UnitizationInfo(object):
@@ -311,8 +309,16 @@ class HistogramUI(BaseWindowController):
             
     
     def update_charset_selection(self):
-        self.charsets = getDefault("charsets")
+        if env == "robofont":
+            self.charsets = getDefault("charsets")
+        else:
+            self.charsets = {}
         self.w.charset_selection.setItems(sorted(self.charsets.keys()))
+        #if len(self.charsets) == 0:
+        #    self.w.charset_selection.enable(False)
+        #else:
+        #    self.w.charset_selection.enable(True)
+            
     
     def get_glyphnames_for_histogram(self):
         font = CurrentFont()
@@ -371,52 +377,39 @@ class HistogramUI(BaseWindowController):
     
     def draw_histogram(self, font, upm, color, show_glyphs=False, histogram=None):
         if histogram is None:
-            try:
-                histogram = self.histogram
-            except Exception, err:
-                self.calculate_histogram
+            if self.histogram is None:
+                return
+            histogram = self.histogram
         drawing.save()
-        if histogram is None:
-            try:
-                histogram = self.histogram
-            except:
-                pass
-        if histogram is None:
-            print "__no Histogram"
-            return
         drawing.fill(1, 0.5, 0.2, 1.0)
         drawing.stroke(color[0], color[1], color[2], color[3])
-        try:
-            for width in sorted(histogram.keys()):
-                num = len(histogram[width])
-                x = 10 + width * self.histogram_width / (upm * self.ems_horizontal)
+        for width in sorted(histogram.keys()):
+            num = len(histogram[width])
+            x = 10 + width * self.histogram_width / (upm * self.ems_horizontal)
+            drawing.save()
+            if show_glyphs:
                 drawing.save()
-                if show_glyphs:
-                    drawing.save()
-                    drawing.fill(color[0], color[1], color[2], 0.2)
-                    drawing.fontsize(self.scale_vertical)
-                    for i in range(len(histogram[width])):
-                        glyph_name = histogram[width][i]
-                        if glyph_name in font:
-                            u = font[glyph_name].unicode
-                            if u:
-                                drawing.text("%s" % unichr(u), x + 4, 18 + i * self.scale_vertical)
-                            else:
-                                drawing.text("%s" % glyph_name, x + 4, 18 + i * self.scale_vertical)
+                drawing.fill(color[0], color[1], color[2], 0.2)
+                drawing.fontsize(self.scale_vertical)
+                for i in range(len(histogram[width])):
+                    glyph_name = histogram[width][i]
+                    if glyph_name in font:
+                        u = font[glyph_name].unicode
+                        if u:
+                            drawing.text("%s" % unichr(u), x + 4, 18 + i * self.scale_vertical)
                         else:
                             drawing.text("%s" % glyph_name, x + 4, 18 + i * self.scale_vertical)
-                    drawing.restore()
-                    drawing.strokewidth(2)
-                else:
-                    drawing.strokewidth(6)
-                # draw bars
-                drawing.line(x, 20, x, 20 + num * self.scale_vertical)
-                drawing.strokewidth(0)
-                drawing.text("%s" % (num), x - 3 * len(str(num)), 22 + num * self.scale_vertical)
+                    else:
+                        drawing.text("%s" % glyph_name, x + 4, 18 + i * self.scale_vertical)
                 drawing.restore()
-        except Exception, err:
-            print sys.exc_info()[0]
-            print traceback.format_exc()
+                drawing.strokewidth(2)
+            else:
+                drawing.strokewidth(6)
+            # draw bars
+            drawing.line(x, 20, x, 20 + num * self.scale_vertical)
+            drawing.strokewidth(0)
+            drawing.text("%s" % (num), x - 3 * len(str(num)), 22 + num * self.scale_vertical)
+            drawing.restore()
         drawing.restore()
     
     def _drawGrid(self):
@@ -459,12 +452,11 @@ class HistogramUI(BaseWindowController):
 
 
 if __name__ == "__main__":
+    # if RoboFont
+    #OpenWindow(HistogramUI)
     print "__Main Start"
     try:
-        if in_glyphs:
-            HistogramUI()
-        else:
-            OpenWindow(HistogramUI)
+        HistogramUI()
     except:
         print "except"
         print sys.exc_info()[0]
