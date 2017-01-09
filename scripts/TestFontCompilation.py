@@ -1,39 +1,36 @@
-from string import split
 from os import remove
+from os.path import exists
 from mojo.roboFont import version
 
 from jkRFoTools.FontChooser import ProcessFonts
 
-def test_compilation(font):
-    temp_font = font.copy(showUI=False)
+from fontCompiler.compiler import FontCompilerOptions
+from fontCompiler.emptyCompiler import EmptyOTFCompiler
 
-    for g in temp_font:
-        g.clear()
-    
+def test_compilation(font):
     if font.path is None:
         return "ERROR: The font needs to be saved first."
-
-    myPath = font.path + "_compiletest.otf"
-    result = temp_font.generate(myPath, "otf")
-    temp_font.close()
-
-    lines = split(result, "\n")
-
-    if version[:3] == "1.5":
-        checkLine = -3
-    elif version[:3] == "1.6":
-        checkLine = -1
-    else:
-        checkLine = -10
-
-    if lines[checkLine][:15] == "makeotf [Error]":
+    font = font.naked()
+    compiler = EmptyOTFCompiler()
+    options = FontCompilerOptions()
+    options.outputPath = font.path + "_compiletest.otf"
+    reports = compiler.compile(font, options)
+    
+    if not "makeotf" in reports:
+        return "OK"
+    
+    result = reports["makeotf"]
+    lines = result.splitlines()
+    
+    if lines[-2][:15] == "makeotf [Error]":
         test_result = ""
         for r in lines:
             if r[:18] in ["makeotfexe [ERROR]", "makeotfexe [FATAL]"]:
                 test_result += r[11:] + "\n"
     else:
         test_result = "OK"
-        remove(myPath)
+        if exists(options.outputPath):
+            remove(options.outputPath)
     return test_result
 
 ProcessFonts("Test Compilation", test_compilation)
