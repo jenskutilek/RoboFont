@@ -29,8 +29,6 @@ wait for remove overlaps, decompose, etc.
 
 If any errors occur, the error messages are displayed in the output window.
 
-This script is currently broken in RoboFont 1.6.
-
 TestInstallAllOpen.py
 ---------------------
 
