@@ -21,8 +21,10 @@ def test_compilation(font):
 
     if version[:3] == "1.5":
         checkLine = -3
-    else:
+    elif version[:3] == "1.6":
         checkLine = -1
+    else:
+        checkLine = -10
 
     if lines[checkLine][:15] == "makeotf [Error]":
         test_result = ""
