@@ -94,13 +94,15 @@ class RoboGit(BaseWindowController):
         if fontPath is None:
             print "ERROR: Font must be saved and inserted into a versioning system first!"
         else:
-            try:
-                self.repo = git.Repo(fontPath)
-                #self.w.showGlyphStatusButton.enable(True)
-                return True
-            except:
+            git_dir = self.findGitDir(fontPath)
+            print git_dir
+            if git_dir is None:
                 self.repo = None
                 self.w.showGlyphStatusButton.enable(False)
+            else:
+                self.repo = git.Repo(git_dir)
+                self.w.showGlyphStatusButton.enable(True)
+                return True
         return False
     
     def getFileNameToGlyphNameMap(self):
