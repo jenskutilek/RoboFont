@@ -1,9 +1,11 @@
 import vanilla
-from string import split
 from sys import getsizeof
 from defconAppKit.windows.baseWindow import BaseWindowController
 from lib.scripting.codeEditor import CodeEditor
-from robofab.plistlib import writePlistToString
+try:
+    from plistlib import writePlistToString
+except ImportError:
+    from plistlib import dumps as writePlistToString
 from knownKeys import known_keys
 
 
@@ -82,14 +84,14 @@ class UFOCleaner(BaseWindowController):
                 if not k in self._seen_keys:
                     self._libkeys.append({
                         "Delete": False,
-                        "Description": self._known_keys.get(k, "(%s)" % split(k, ".")[-1]),
+                        "Description": self._known_keys.get(k, "(%s)" % k.split(".")[-1]),
                         "Size": "? kB",
                         "Key": k,
                         "Location": "Font",
                     })
                     self._seen_keys.append(k)
                     self._key_contents[k] = ""
-                self._key_contents[k] += writePlistToString(self._font.lib[k])[173:-9]
+                self._key_contents[k] += writePlistToString(self._font.lib[k])[173:-9].decode("utf-8")
                 self._key_sizes[k] = len(self._key_contents[k])
             
             # Glyph libs
@@ -98,14 +100,14 @@ class UFOCleaner(BaseWindowController):
                     if not k in self._seen_keys:
                         self._libkeys.append({
                         "Delete": False,
-                        "Description": self._known_keys.get(k, "(%s)" % split(k, ".")[-1]),
+                        "Description": self._known_keys.get(k, "(%s)" % k.split(".")[-1]),
                         "Size": "? kB",
                         "Key": k,
                         "Location": "Glyph",
                         })
                         self._seen_keys.append(k)
                         self._key_contents[k] = ""
-                    self._key_contents[k] += writePlistToString(g.lib[k])[173:-9]
+                    self._key_contents[k] += writePlistToString(g.lib[k])[173:-9].decode("utf-8")
                     self._key_sizes[k] = len(self._key_contents[k])
         
         # Collect key sizes
