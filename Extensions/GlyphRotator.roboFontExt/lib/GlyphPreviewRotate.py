@@ -1,7 +1,9 @@
+from __future__ import absolute_import, division, print_function
 # Advanced GlyphProcessor
 
 from vanilla import FloatingWindow, Slider
 from mojo.glyphPreview import GlyphPreview
+from mojo.roboFont import version as roboFontVersion
 from GlyphProcessor import GlyphProcessorUI
 from fontTools.misc.transform import Identity
 
@@ -47,7 +49,7 @@ class RotatedGlyphPreview(GlyphProcessorUI):
     
     def _currentGlyphChangedObserver(self, info=None):
         if CurrentFont() is not None:
-            self._scale = 1000.0/CurrentFont().info.unitsPerEm
+            self._scale = 1000 / CurrentFont().info.unitsPerEm
             self._y = (CurrentFont().info.ascender + CurrentFont().info.descender) / 2 * self._scale
         else:
             self._scale = 1
@@ -105,10 +107,13 @@ class RotatedGlyphPreview(GlyphProcessorUI):
         cG = CurrentGlyph()
         if cG is not None:
             self.previewGlyph = self._deepAppendGlyph(RGlyph(), cG, CurrentFont())
-            self.previewGlyph.width = cG.width
-            self.previewGlyph.scale((self._scale, self._scale))
-            self.previewGlyph.width *= self._scale
-            self.previewGlyph.rotate(self.settings["rotation"], (self.previewGlyph.width/2.0, self._y))
+            self.previewGlyph.width = cG.width * self._scale
+            if roboFontVersion >= "2.0b":
+                self.previewGlyph.scaleBy((self._scale, self._scale))
+                self.previewGlyph.rotateBy(self.settings["rotation"], (self.previewGlyph.width / 2, self._y))
+            else:
+                self.previewGlyph.scale((self._scale, self._scale))
+                self.previewGlyph.rotate(self.settings["rotation"], (self.previewGlyph.width / 2, self._y))
         else:
             self.previewGlyph = RGlyph()
         self.w.preview.setGlyph(self.previewGlyph)

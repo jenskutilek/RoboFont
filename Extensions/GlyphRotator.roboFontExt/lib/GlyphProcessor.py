@@ -1,3 +1,4 @@
+from __future__ import absolute_import, division, print_function
 ## Glyph Processor
 ## Version 0.1 by Jens Kutilek 2013-03-27
 
@@ -48,7 +49,7 @@ class GlyphProcessorUI(BaseWindowController):
         }
     
     def _addObservers(self):
-        for event, observer in self._getObservers().iteritems():
+        for event, observer in self._getObservers().items():
             for method in observer:
                 addObserver(self, method, event)
     
@@ -56,11 +57,11 @@ class GlyphProcessorUI(BaseWindowController):
         self.settings = {}
     
     def _loadSettings(self):
-        #print "Load settings ..."
-        for k, v in self.settings.iteritems():
-            #print "    Setting: '%s': (Default: %s)" % (k, v),
+        #print("Load settings ...")
+        for k, v in self.settings.items():
+            #print("    Setting: '%s': (Default: %s)" % (k, v),)
             self.settings[k] = getExtensionDefault("%s.%s" %(self.extensionID, k), v)
-            #print self.settings[k]
+            #print(self.settings[k])
     
     def _loadSettingsFromFont(self):
         if self.font is None:
@@ -72,9 +73,9 @@ class GlyphProcessorUI(BaseWindowController):
                 self._initSettings()
     
     def _saveSettings(self):
-        #print "Save settings ..."
-        for k, v in self.settings.iteritems():
-            #print "    Setting: '%s': %s" % (k, v)
+        #print("Save settings ...")
+        for k, v in self.settings.items():
+            #print("    Setting: '%s': %s" % (k, v))
             setExtensionDefault("%s.%s" % (self.extensionID, k), v)
     
     def _saveSettingsToFont(self):
@@ -114,6 +115,6 @@ class GlyphProcessorUI(BaseWindowController):
     def _noFontCallback(self):
         # Enable or disable UI elements ...
         if self.font is None:
-            print "Font is None"
+            print("Font is None")
         else:
-            print "Font is not None"
+            print("Font is not None")
