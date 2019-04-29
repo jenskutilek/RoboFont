@@ -88,7 +88,7 @@ class RotatedGlyphPreview(GlyphProcessorUI):
                         compGlyph.transform(transformObj)
 
                 # add the two tuples of offset:
-                totalOffset = map(sum, zip(component.offset, offset))
+                totalOffset = tuple(map(sum, zip(component.offset, offset)))
                 glyph.appendGlyph(compGlyph, totalOffset)
 
             for contour in gToAppend:
