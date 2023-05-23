@@ -1,9 +1,11 @@
 #MenuTitle: Glyph Width Histogram
 # by Jens 2014-09-08
+# RF 4/Python 3 version 2023-05-23
 
 from math import ceil
 import vanilla
 from defconAppKit.windows.baseWindow import BaseWindowController
+import sys
 import traceback
 
 try:
@@ -50,7 +52,7 @@ class UnitizationInfo(object):
         return ui_list
     
     def get_system_by_name(self, name):
-        for system_list in self.systems.itervalues():
+        for system_list in self.systems.values():
             for system in system_list:
                 if system.name == name:
                     return system
@@ -92,9 +94,19 @@ class UnitSystem(object):
         self.fixed_units = {}
         self.free_units = free_units
 
+    def __eq__(self, other):
+        return self.name == other.name
+
+    def __gt__(self, other):
+        return self.name > other.name
+
+    def __lt__(self, other):
+        return self.name < other.name
+    
+
 # define known unit systems
 # sources: <http://www.quadibloc.com/comp/propint.htm>
-#          Osterer, Stamm (Hrsg.): Adrian Frutiger Schriften. Das Gesamtwerk. Birkhaeuser 2009
+#		  Osterer, Stamm (Hrsg.): Adrian Frutiger Schriften. Das Gesamtwerk. Birkhaeuser 2009
 
 unitization_info = UnitizationInfo()
 
@@ -149,7 +161,7 @@ HistogramUI - the main window (RoboFont-specific)
 class HistogramUI(BaseWindowController):
 
     def __init__(self):
-        
+        self.histogram = None
         self.histogram_width = 608
         self.histogram_height = 380
         histogram_x_offset = 10
@@ -292,7 +304,7 @@ class HistogramUI(BaseWindowController):
         self.calculate_histogram()
     
     def _updateButtonCallback(self, sender=None):
-        print "__updateButtonCallback"
+        print("__updateButtonCallback")
         try:
             charset_index = self.w.charset_selection.get()
             self.update_charset_selection()
@@ -304,8 +316,8 @@ class HistogramUI(BaseWindowController):
             self.calculate_histogram()
             self.w.histogram.update()
         except:
-            print "__updateButtonCallback Error"
-            print traceback.format_exc()
+            print("__updateButtonCallback Error")
+            print(traceback.format_exc())
             
     
     def update_charset_selection(self):
@@ -315,9 +327,9 @@ class HistogramUI(BaseWindowController):
             self.charsets = {}
         self.w.charset_selection.setItems(sorted(self.charsets.keys()))
         #if len(self.charsets) == 0:
-        #    self.w.charset_selection.enable(False)
+        #	self.w.charset_selection.enable(False)
         #else:
-        #    self.w.charset_selection.enable(True)
+        #	self.w.charset_selection.enable(True)
             
     
     def get_glyphnames_for_histogram(self):
@@ -329,7 +341,7 @@ class HistogramUI(BaseWindowController):
         elif mode == 1:
             #print "Analyze All Glyphs"
             names = font.glyphOrder
-            print "__Names:", names
+            print("__Names:", names)
         else:
             #print "Analyze Charset"
             all_glyphs = font.glyphOrder
@@ -338,7 +350,7 @@ class HistogramUI(BaseWindowController):
         return names
     
     def calculate_histogram(self, sender=None):
-        print "calculate_histogram"
+        print("calculate_histogram")
         try:
             font = CurrentFont()
             #names = self.get_glyphnames_for_histogram()
@@ -354,10 +366,10 @@ class HistogramUI(BaseWindowController):
                     histogram[width] = [name]
             self.max_width = max_width
             self.histogram = histogram
-        except Exception, err:
-            print "calculate_histogram Error"
-            print traceback.format_exc()
-        print "calculate_histogram"
+        except Exception as err:
+            print("calculate_histogram Error")
+            print(traceback.format_exc())
+        print("calculate_histogram")
         #print self.histogram
         self.w.histogram.update()
     
@@ -371,8 +383,8 @@ class HistogramUI(BaseWindowController):
             # display the fixed widths of the current unitization system
             self.draw_histogram(font, self.system.upm, (0, 0, 1, 0.5), True, histogram=self.system.fixed_units)
         # draw the histogram for the current font
-        print "__font:", font
-        print "__font.info:", font.info
+        print ("__font:", font)
+        print ("__font.info:", font.info)
         self.draw_histogram(font, font.info.unitsPerEm, (1, 0, 0, 1), True)
     
     def draw_histogram(self, font, upm, color, show_glyphs=False, histogram=None):
@@ -390,24 +402,24 @@ class HistogramUI(BaseWindowController):
             if show_glyphs:
                 drawing.save()
                 drawing.fill(color[0], color[1], color[2], 0.2)
-                drawing.fontsize(self.scale_vertical)
+                drawing.fontSize(self.scale_vertical)
                 for i in range(len(histogram[width])):
                     glyph_name = histogram[width][i]
                     if glyph_name in font:
                         u = font[glyph_name].unicode
                         if u:
-                            drawing.text("%s" % unichr(u), x + 4, 18 + i * self.scale_vertical)
+                            drawing.text("%s" % chr(u), x + 4, 18 + i * self.scale_vertical)
                         else:
                             drawing.text("%s" % glyph_name, x + 4, 18 + i * self.scale_vertical)
                     else:
                         drawing.text("%s" % glyph_name, x + 4, 18 + i * self.scale_vertical)
                 drawing.restore()
-                drawing.strokewidth(2)
+                drawing.strokeWidth(2)
             else:
-                drawing.strokewidth(6)
+                drawing.strokeWidth(6)
             # draw bars
-            drawing.line(x, 20, x, 20 + num * self.scale_vertical)
-            drawing.strokewidth(0)
+            drawing.line((x, 20), (x, 20 + num * self.scale_vertical))
+            drawing.strokeWidth(0)
             drawing.text("%s" % (num), x - 3 * len(str(num)), 22 + num * self.scale_vertical)
             drawing.restore()
         drawing.restore()
@@ -434,17 +446,17 @@ class HistogramUI(BaseWindowController):
             if u == self.units:
                 # mark the full em
                 drawing.stroke(0, 0, 0)
-                drawing.line(x, 20, x, self.histogram_height-10)
+                drawing.line((x, 20), (x, self.histogram_height-10))
                 drawing.strokeWidth(0)
                 drawing.text("1 em", x + 4, self.histogram_height - 21)
                 drawing.strokeWidth(1.0)
             elif u % 10 == 0:
                 # make every 10th line darker
                 drawing.stroke(0.5, 0.5, 0.5)
-                drawing.line(x, 20, x, self.histogram_height - 20)
+                drawing.line((x, 20), (x, self.histogram_height - 20))
             else:
                 drawing.stroke(0.8, 0.8, 0.8)
-                drawing.line(x, 20, x, self.histogram_height - 30)
+                drawing.line((x, 20), (x, self.histogram_height - 30))
             if u % label_every == 0:
                 drawing.strokeWidth(0)
                 drawing.text("%s" % (u), x - 3 * len(str(u)), 5)
@@ -453,12 +465,12 @@ class HistogramUI(BaseWindowController):
 
 if __name__ == "__main__":
     # if RoboFont
-    #OpenWindow(HistogramUI)
-    print "__Main Start"
-    try:
-        HistogramUI()
-    except:
-        print "except"
-        print sys.exc_info()[0]
+    OpenWindow(HistogramUI)
+    #print ("__Main Start")
+    #try:
+    #	HistogramUI()
+    #except:
+    #	print ("except")
+    #	print (sys.exc_info()[0])
         
-    print "__Main End"
+    #print ("__Main End")
